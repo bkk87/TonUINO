@@ -228,7 +228,7 @@
 // uncomment ONE OF THE BELOW TWO LINES to enable status led support
 // the first enables support for a vanilla led
 // the second enables support for ws281x led(s)
-// #define STATUSLED
+#define STATUSLED
 // #define STATUSLEDRGB
 
 // uncomment the below line to enable low voltage shutdown support
@@ -327,9 +327,9 @@ const uint64_t enterPinCodeTimeout = 10000;         // time to enter the pin cod
 
 // default values for preferences
 const uint8_t preferenceVersion = 1;
-const uint8_t mp3StartVolumeDefault = 15;
-const uint8_t mp3MaxVolumeDefault = 25;
-const uint8_t mp3MenuVolumeDefault = 15;
+const uint8_t mp3StartVolumeDefault = 1;
+const uint8_t mp3MaxVolumeDefault = 15;
+const uint8_t mp3MenuVolumeDefault = 1;
 const uint8_t mp3EqualizerDefault = 1;
 const uint8_t shutdownMinutesDefault = 10;
 const uint16_t irRemoteUserCodesDefault[7] = {};
@@ -586,6 +586,7 @@ void setup() {
   Serial.print(F("   start "));
   Serial.println(preference.mp3StartVolume);
   mp3.setVolume(playback.mp3CurrentVolume = preference.mp3StartVolume);
+  delay(1000);
   Serial.print(F("     max "));
   Serial.println(preference.mp3MaxVolume);
   Serial.print(F("    menu "));
@@ -593,8 +594,10 @@ void setup() {
   Serial.print(F("      eq "));
   Serial.println(mp3EqualizerName[preference.mp3Equalizer]);
   mp3.setEq((DfMp3_Eq)(preference.mp3Equalizer - 1));
+  delay(1000);
   Serial.print(F("   files "));
   Serial.println(mp3.getTotalTrackCount(DfMp3_PlaySource_Sd));
+  delay(1000);
   pinMode(mp3BusyPin, INPUT);
 
   Serial.print(F("init"));
@@ -670,9 +673,12 @@ void setup() {
       }
       preferences(RESET);
       mp3.setVolume(playback.mp3CurrentVolume = preference.mp3StartVolume);
+      delay(1000);
       mp3.setEq((DfMp3_Eq)(preference.mp3Equalizer - 1));
+      delay(1000);
       shutdownTimer(START);
       mp3.playMp3FolderTrack(809);
+      delay(1000);
       waitPlaybackToFinish(0, 255, 0, 100);
 #if defined PINCODE
     }
@@ -681,6 +687,7 @@ void setup() {
 
   switchButtonConfiguration(PAUSE);
   mp3.playMp3FolderTrack(800);
+  delay(1000);
   Serial.println(F("ready"));
 }
 
@@ -694,6 +701,7 @@ void loop() {
   if (shutdownVoltage.Read_Volts() <= shutdownMinVoltage) {
     if (playback.currentTag.mode == STORYBOOK) EEPROM.update(playback.currentTag.folder, playback.playList[playback.playListItem - 1]);
     mp3.playMp3FolderTrack(808);
+    delay(100);
     waitPlaybackToFinish(255, 0, 0, 100);
     shutdownTimer(SHUTDOWN);
   }
@@ -745,6 +753,7 @@ void loop() {
           case STORYBOOK: {
               playback.folderStartTrack = 1;
               playback.folderEndTrack = mp3.getFolderTrackCount(playback.currentTag.folder);
+              delay(100);
               break;
             }
           case VSTORY: {}
@@ -812,6 +821,7 @@ void loop() {
         playback.playListMode = true;
         printModeFolderTrack(true);
         mp3.playFolderTrack(playback.currentTag.folder, playback.playList[playback.playListItem - 1]);
+        delay(100);
       }
       // # end - nfc tag has our magic cookie on it
       // ##########################################
@@ -824,6 +834,7 @@ void loop() {
 
         // set volume to menu volume
         mp3.setVolume(preference.mp3MenuVolume);
+        delay(100);
 
         switchButtonConfiguration(CONFIG);
         shutdownTimer(STOP);
@@ -834,6 +845,7 @@ void loop() {
           newTag.folder = prompt(99, 801, 0, 0, 0, true, false);
           if (newTag.folder == 0) {
             mp3.playMp3FolderTrack(807);
+            delay(100);
             waitPlaybackToFinish(255, 0, 0, 100);
             break;
           }
@@ -841,15 +853,18 @@ void loop() {
           newTag.mode = prompt(8, 820, 820, 0, 0, false, false);
           if (newTag.mode == 0) {
             mp3.playMp3FolderTrack(807);
+            delay(100);
             waitPlaybackToFinish(255, 0, 0, 100);
             break;
           }
           else if (newTag.mode == SINGLE) {
             Serial.println(F("singletrack"));
             newTag.multiPurposeData1 = prompt(mp3.getFolderTrackCount(newTag.folder), 802, 0, 0, newTag.folder, true, false);
+            delay(100);
             newTag.multiPurposeData2 = 0;
             if (newTag.multiPurposeData1 == 0) {
               mp3.playMp3FolderTrack(807);
+              delay(100);
               waitPlaybackToFinish(255, 0, 0, 100);
               break;
             }
@@ -857,16 +872,20 @@ void loop() {
           else if (newTag.mode == VSTORY || newTag.mode == VALBUM || newTag.mode == VPARTY) {
             Serial.println(F("starttrack"));
             newTag.multiPurposeData1 = prompt(mp3.getFolderTrackCount(newTag.folder), 803, 0, 0, newTag.folder, true, false);
+            delay(100);
             if (newTag.multiPurposeData1 == 0) {
               mp3.playMp3FolderTrack(807);
+              delay(100);
               waitPlaybackToFinish(255, 0, 0, 100);
               break;
             }
             Serial.println(F("endtrack"));
             newTag.multiPurposeData2 = prompt(mp3.getFolderTrackCount(newTag.folder), 804, 0, newTag.multiPurposeData1, newTag.folder, true, false);
+            delay(100);
             newTag.multiPurposeData2 = max(newTag.multiPurposeData1, newTag.multiPurposeData2);
             if (newTag.multiPurposeData2 == 0) {
               mp3.playMp3FolderTrack(807);
+              delay(100);
               waitPlaybackToFinish(255, 0, 0, 100);
               break;
             }
@@ -886,10 +905,12 @@ void loop() {
           uint8_t writeNfcTagStatus = writeNfcTagData(bytesToWrite, sizeof(bytesToWrite));
           if (writeNfcTagStatus == 1) {
             mp3.playMp3FolderTrack(805);
+            delay(100);
             waitPlaybackToFinish(0, 255, 0, 100);
           }
           else {
             mp3.playMp3FolderTrack(806);
+            delay(100);
             waitPlaybackToFinish(255, 0, 0, 100);
           }
           break;
@@ -899,6 +920,7 @@ void loop() {
 
         // restore playback volume, can't be higher than maximum volume
         mp3.setVolume(playback.mp3CurrentVolume = min(playback.mp3CurrentVolume, preference.mp3MaxVolume));
+        delay(100);
 
         switchButtonConfiguration(PAUSE);
         shutdownTimer(START);
@@ -937,6 +959,7 @@ void loop() {
       shutdownTimer(START);
       Serial.println(F("pause"));
       mp3.pause();
+      delay(100);
       // if the current playback mode is story book mode: store the current progress
       if (playback.currentTag.mode == STORYBOOK) {
         Serial.print(F("save "));
@@ -950,6 +973,7 @@ void loop() {
         shutdownTimer(STOP);
         Serial.println(F("play"));
         mp3.start();
+        delay(100);
       }
     }
   }
@@ -957,9 +981,16 @@ void loop() {
   else if (((inputEvent == B1P && !playback.isLocked) || inputEvent == IRU) && playback.isPlaying) {
     if (playback.mp3CurrentVolume < preference.mp3MaxVolume) {
       mp3.setVolume(++playback.mp3CurrentVolume);
+      delay(100);
       Serial.print(F("volume "));
       Serial.println(playback.mp3CurrentVolume);
     }
+    if (playback.mp3CurrentVolume < preference.mp3MaxVolume) {
+      mp3.setVolume(++playback.mp3CurrentVolume);
+      delay(100);
+      Serial.print(F("volume "));
+      Serial.println(playback.mp3CurrentVolume);
+    }    
 #if defined STATUSLED
     else statusLedUpdate(BURST2, 255, 0, 0, 0);
 #endif
@@ -968,6 +999,13 @@ void loop() {
   else if (((inputEvent == B2P && !playback.isLocked) || inputEvent == IRD) && playback.isPlaying) {
     if (playback.mp3CurrentVolume > 1) {
       mp3.setVolume(--playback.mp3CurrentVolume);
+      delay(100);
+      Serial.print(F("volume "));
+      Serial.println(playback.mp3CurrentVolume);
+    }
+    if (playback.mp3CurrentVolume > 1) {
+      mp3.setVolume(--playback.mp3CurrentVolume);
+      delay(100);
       Serial.print(F("volume "));
       Serial.println(playback.mp3CurrentVolume);
     }
@@ -1008,6 +1046,7 @@ void loop() {
     printModeFolderTrack(true);
     EEPROM.update(playback.currentTag.folder, 0);
     mp3.playFolderTrack(playback.currentTag.folder, playback.playList[playback.playListItem - 1]);
+    delay(100);
 #if defined STATUSLED ^ defined STATUSLEDRGB
     statusLedUpdate(BURST8, 255, 0, 255, 0);
 #endif
@@ -1254,21 +1293,24 @@ void switchButtonConfiguration(uint8_t buttonMode) {
 
 // waits for current playing track to finish
 void waitPlaybackToFinish(uint8_t red, uint8_t green, uint8_t blue, uint16_t statusLedUpdateInterval) {
-  uint64_t waitPlaybackToStartMillis = millis();
-
-  delay(500);
-  while (digitalRead(mp3BusyPin)) {
-    if (millis() - waitPlaybackToStartMillis >= 10000) break;
-#if defined STATUSLED ^ defined STATUSLEDRGB
-    statusLedUpdate(BLINK, red, green, blue, statusLedUpdateInterval);
-#endif
-  }
-  while (!digitalRead(mp3BusyPin)) {
-#if defined STATUSLED ^ defined STATUSLEDRGB
-    statusLedUpdate(BLINK, red, green, blue, statusLedUpdateInterval);
-#endif
-    mp3.loop();
-  }
+//  uint64_t waitPlaybackToStartMillis = millis();
+//
+    delay(3000);
+//  while (digitalRead(mp3BusyPin)) {
+//    if (millis() - waitPlaybackToStartMillis >= 10000) break;
+//#if defined STATUSLED ^ defined STATUSLEDRGB
+//    statusLedUpdate(BLINK, red, green, blue, statusLedUpdateInterval);
+//#endif
+//  }
+//  delay(2000);
+//  while (!digitalRead(mp3BusyPin)) {
+//#if defined STATUSLED ^ defined STATUSLEDRGB
+//    statusLedUpdate(BURST2, red, green, blue, statusLedUpdateInterval);
+//#endif
+//    mp3.loop();
+//  }
+  mp3.loop();
+  delay(10);
 }
 
 // prints current mode, folder and track information
@@ -1316,6 +1358,7 @@ void playNextTrack(uint16_t globalTrack, bool directionForward, bool triggeredMa
       lastCallTrack = 0;
       printModeFolderTrack(true);
       mp3.playFolderTrack(playback.currentTag.folder, playback.playList[playback.playListItem - 1]);
+      delay(100);
     }
     else {
       playback.playListMode = false;
@@ -1324,6 +1367,7 @@ void playNextTrack(uint16_t globalTrack, bool directionForward, bool triggeredMa
       Serial.print(playbackModeName[playback.currentTag.mode]);
       Serial.println(F("-stop"));
       mp3.stop();
+      delay(100);
     }
   }
 
@@ -1352,12 +1396,14 @@ void playNextTrack(uint16_t globalTrack, bool directionForward, bool triggeredMa
         lastCallTrack = 0;
         printModeFolderTrack(true);
         mp3.playFolderTrack(playback.currentTag.folder, playback.playList[playback.playListItem - 1]);
+        delay(100);
       }
       // there are more tracks after the current one, play next track
       else if (playback.playListItem < playback.playListItemCount) {
         playback.playListItem++;
         printModeFolderTrack(true);
         mp3.playFolderTrack(playback.currentTag.folder, playback.playList[playback.playListItem - 1]);
+        delay(100);
       }
       // there are no more tracks after the current one
       else {
@@ -1374,6 +1420,7 @@ void playNextTrack(uint16_t globalTrack, bool directionForward, bool triggeredMa
           }
           Serial.println();
           mp3.stop();
+          delay(100);
         }
 #if defined STATUSLED
         else statusLedUpdate(BURST2, 255, 0, 0, 0);
@@ -1387,6 +1434,7 @@ void playNextTrack(uint16_t globalTrack, bool directionForward, bool triggeredMa
         playback.playListItem--;
         printModeFolderTrack(true);
         mp3.playFolderTrack(playback.currentTag.folder, playback.playList[playback.playListItem - 1]);
+        delay(100);
       }
 #if defined STATUSLED
       else statusLedUpdate(BURST2, 255, 0, 0, 0);
@@ -1722,6 +1770,7 @@ uint8_t prompt(uint8_t promptOptions, uint16_t promptHeading, uint16_t promptOff
   uint8_t promptResult = promptCurrent;
 
   mp3.playMp3FolderTrack(promptHeading);
+  delay(100);
   while (true) {
     playback.isPlaying = !digitalRead(mp3BusyPin);
     checkForInput();
@@ -1736,21 +1785,24 @@ uint8_t prompt(uint8_t promptOptions, uint16_t promptHeading, uint16_t promptOff
     // button 0 (middle) press or ir remote play/pause: confirm selection
     if ((inputEvent == B0P || inputEvent == IRP) && promptResult != 0) {
       if (promptPreview && !playback.isPlaying) {
-        if (promptFolder == 0) mp3.playFolderTrack(promptResult, 1);
-        else mp3.playFolderTrack(promptFolder, promptResult);
+        if (promptFolder == 0) {mp3.playFolderTrack(promptResult, 1);delay(100);}
+        else {mp3.playFolderTrack(promptFolder, promptResult);delay(100);}
       }
       else return promptResult;
     }
     // button 0 (middle) double click or ir remote center: announce current folder, track number or option
     else if ((inputEvent == B0D || inputEvent == IRC) && promptResult != 0) {
-      if (promptPreview && playback.isPlaying) mp3.playAdvertisement(promptResult);
+      if (promptPreview && playback.isPlaying) {mp3.playAdvertisement(promptResult);delay(100);}
       else if (promptPreview && !playback.isPlaying) {
         if (promptFolder == 0) mp3.playFolderTrack(promptResult, 1);
         else mp3.playFolderTrack(promptFolder, promptResult);
+        delay(100);
       }
       else {
         if (promptChangeVolume) mp3.setVolume(promptResult + promptOffset);
+        delay(100);
         mp3.playMp3FolderTrack(promptResult + promptOffset);
+        delay(100);
       }
     }
     // button 1 (right) press or ir remote up: next folder, track number or option
@@ -1758,12 +1810,15 @@ uint8_t prompt(uint8_t promptOptions, uint16_t promptHeading, uint16_t promptOff
       promptResult = min(promptResult + 1, promptOptions);
       Serial.println(promptResult);
       if (promptPreview) {
-        if (promptFolder == 0) mp3.playFolderTrack(promptResult, 1);
+        if (promptFolder == 0) {mp3.playFolderTrack(promptResult, 1);delay(100);}
         else mp3.playFolderTrack(promptFolder, promptResult);
+        delay(100);
       }
       else {
         if (promptChangeVolume) mp3.setVolume(promptResult + promptOffset);
+        delay(100);
         mp3.playMp3FolderTrack(promptResult + promptOffset);
+        delay(100);
       }
     }
     // button 2 (left) press or ir remote up: previous folder, track number or option
@@ -1773,10 +1828,13 @@ uint8_t prompt(uint8_t promptOptions, uint16_t promptHeading, uint16_t promptOff
       if (promptPreview) {
         if (promptFolder == 0) mp3.playFolderTrack(promptResult, 1);
         else mp3.playFolderTrack(promptFolder, promptResult);
+        delay(100);
       }
       else {
         if (promptChangeVolume) mp3.setVolume(promptResult + promptOffset);
+        delay(100);
         mp3.playMp3FolderTrack(promptResult + promptOffset);
+        delay(100);
       }
     }
     // button 0 (middle) hold for 2 sec or ir remote menu: cancel
@@ -1789,14 +1847,18 @@ uint8_t prompt(uint8_t promptOptions, uint16_t promptHeading, uint16_t promptOff
       promptResult = min(promptResult + 10, promptOptions);
       Serial.println(promptResult);
       if (promptChangeVolume) mp3.setVolume(promptResult + promptOffset);
+      delay(100);
       mp3.playMp3FolderTrack(promptResult + promptOffset);
+      delay(100);
     }
     // button 2 (left) hold or ir remote left: jump 10 folders, tracks or options backwards
     else if (inputEvent == B2H || inputEvent == B3P || inputEvent == IRL) {
       promptResult = max(promptResult - 10, 1);
       Serial.println(promptResult);
       if (promptChangeVolume) mp3.setVolume(promptResult + promptOffset);
+      delay(100);
       mp3.playMp3FolderTrack(promptResult + promptOffset);
+      delay(100);
     }
 #if defined STATUSLED ^ defined STATUSLEDRGB
     statusLedUpdate(BLINK, 255, 255, 0, 500);
@@ -1815,6 +1877,7 @@ void parentsMenu() {
 
   // set volume to menu volume
   mp3.setVolume(preference.mp3MenuVolume);
+  delay(100);
 
   switchButtonConfiguration(CONFIG);
   shutdownTimer(STOP);
@@ -1825,13 +1888,15 @@ void parentsMenu() {
     // cancel
     if (selectedOption == 0) {
       mp3.playMp3FolderTrack(904);
-      waitPlaybackToFinish(255, 255, 0, 100);
+      delay(100);
+      //waitPlaybackToFinish(255, 255, 0, 100);
       break;
     }
     // erase tag
     else if (selectedOption == 1) {
       Serial.println(F("erase tag"));
       mp3.playMp3FolderTrack(920);
+      delay(100);
       // loop until tag is erased
       uint8_t writeNfcTagStatus = 0;
       while (!writeNfcTagStatus) {
@@ -1840,7 +1905,8 @@ void parentsMenu() {
         if (inputEvent == B0H || inputEvent == IRM) {
           Serial.println(F("cancel"));
           mp3.playMp3FolderTrack(923);
-          waitPlaybackToFinish(255, 0, 0, 100);
+          delay(100);
+          //waitPlaybackToFinish(255, 0, 0, 100);
           break;
         }
         // wait for nfc tag, erase once detected
@@ -1849,9 +1915,10 @@ void parentsMenu() {
           writeNfcTagStatus = writeNfcTagData(bytesToWrite, sizeof(bytesToWrite));
           if (writeNfcTagStatus == 1) {
             mp3.playMp3FolderTrack(921);
+            delay(100);
             waitPlaybackToFinish(0, 255, 0, 100);
           }
-          else mp3.playMp3FolderTrack(922);
+          else {mp3.playMp3FolderTrack(922); delay(100);}
         }
 #if defined STATUSLED ^ defined STATUSLEDRGB
         statusLedUpdate(BLINK, 255, 0, 255, 500);
@@ -1868,7 +1935,9 @@ void parentsMenu() {
         preferences(WRITE);
         // set volume to menu volume
         mp3.setVolume(preference.mp3MenuVolume);
+        delay(100);
         mp3.playMp3FolderTrack(901);
+        delay(100);
         waitPlaybackToFinish(0, 255, 0, 100);
       }
     }
@@ -1883,7 +1952,9 @@ void parentsMenu() {
         preferences(WRITE);
         // set volume to menu volume
         mp3.setVolume(preference.mp3MenuVolume);
+        delay(100);
         mp3.playMp3FolderTrack(901);
+        delay(100);
         waitPlaybackToFinish(0, 255, 0, 100);
       }
     }
@@ -1896,7 +1967,9 @@ void parentsMenu() {
         preferences(WRITE);
         // set volume to menu volume
         mp3.setVolume(preference.mp3MenuVolume);
+        delay(100);
         mp3.playMp3FolderTrack(901);
+        delay(100);
         waitPlaybackToFinish(0, 255, 0, 100);
       }
     }
@@ -1907,8 +1980,10 @@ void parentsMenu() {
       if (promptResult != 0) {
         preference.mp3Equalizer = promptResult;
         mp3.setEq((DfMp3_Eq)(preference.mp3Equalizer - 1));
+        delay(100);
         preferences(WRITE);
         mp3.playMp3FolderTrack(901);
+        delay(100);
         waitPlaybackToFinish(0, 255, 0, 100);
       }
     }
@@ -1918,7 +1993,8 @@ void parentsMenu() {
       Serial.println(F("learn remote"));
       for (uint8_t i = 0; i < 7; i++) {
         mp3.playMp3FolderTrack(951 + i);
-        waitPlaybackToFinish(0, 0, 255, 500);
+        delay(100);
+        //waitPlaybackToFinish(0, 0, 255, 500);
         // clear ir receive buffer
         IrReceiver.resume();
         // wait for ir signal
@@ -1951,9 +2027,11 @@ void parentsMenu() {
       }
       preferences(WRITE);
       mp3.playMp3FolderTrack(901);
+      delay(100);
       waitPlaybackToFinish(0, 255, 0, 100);
 #else
       mp3.playMp3FolderTrack(950);
+      delay(100);
       waitPlaybackToFinish(255, 0, 0, 100);
 #endif
     }
@@ -1997,6 +2075,7 @@ void parentsMenu() {
         }
         preferences(WRITE);
         mp3.playMp3FolderTrack(901);
+        delay(100);
         waitPlaybackToFinish(0, 255, 0, 100);
       }
     }
@@ -2004,14 +2083,18 @@ void parentsMenu() {
     else if (selectedOption == 8) {
       preferences(RESET_PROGRESS);
       mp3.playMp3FolderTrack(902);
+      delay(100);
       waitPlaybackToFinish(0, 255, 0, 100);
     }
     // reset preferences
     else if (selectedOption == 9) {
       preferences(RESET);
       mp3.setVolume(preference.mp3MenuVolume);
+      delay(100);
       mp3.setEq((DfMp3_Eq)(preference.mp3Equalizer - 1));
+      delay(100);
       mp3.playMp3FolderTrack(903);
+      delay(100);
       waitPlaybackToFinish(0, 255, 0, 100);
     }
     // manual box shutdown
@@ -2024,6 +2107,7 @@ void parentsMenu() {
 
   // restore playback volume, can't be higher than maximum volume
   mp3.setVolume(playback.mp3CurrentVolume = min(playback.mp3CurrentVolume, preference.mp3MaxVolume));
+  delay(100);
 
   switchButtonConfiguration(PAUSE);
   shutdownTimer(START);
@@ -2041,12 +2125,14 @@ bool enterPinCode() {
 
   // set volume to menu volume
   mp3.setVolume(preference.mp3MenuVolume);
+  delay(100);
 
   switchButtonConfiguration(PIN);
   shutdownTimer(STOP);
 
   Serial.println(F("pin?"));
   mp3.playMp3FolderTrack(810);
+  delay(100);
   while (true) {
     checkForInput();
     // map ir inputs to corresponding button inputs
@@ -2055,6 +2141,7 @@ bool enterPinCode() {
     if (inputEvent == B0H || inputEvent == IRM || millis() > cancelEnterPinCodeMillis) {
       Serial.println(F("cancel"));
       mp3.playMp3FolderTrack(811);
+      delay(100);
       waitPlaybackToFinish(255, 0, 0, 100);
 
       // restore playback volume, can't be higher than maximum volume
